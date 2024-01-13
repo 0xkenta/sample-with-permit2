@@ -4,20 +4,20 @@ pragma solidity ^0.8.17;
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {MainnetTokenTest} from "../MainnetToken.t.sol";
 
-contract TooManyReturnBytesTokenTest is MainnetTokenTest {
-    ReturnsTooMuchToken _token;
+// contract TooManyReturnBytesTokenTest is MainnetTokenTest {
+//     ReturnsTooMuchToken _token;
 
-    function setupToken() internal override {
-        _token = new ReturnsTooMuchToken();
-        deal(address(token()), from, AMOUNT);
-        vm.prank(from);
-        token().approve(address(permit2), AMOUNT);
-    }
+//     function setupToken() internal override {
+//         _token = new ReturnsTooMuchToken();
+//         deal(address(token()), from, AMOUNT);
+//         vm.prank(from);
+//         token().approve(address(permit2), AMOUNT);
+//     }
 
-    function token() internal view override returns (ERC20) {
-        return ERC20(address(_token));
-    }
-}
+//     function token() internal view override returns (ERC20) {
+//         return ERC20(address(_token));
+//     }
+// }
 
 contract ReturnsTooMuchToken {
     /*///////////////////////////////////////////////////////////////

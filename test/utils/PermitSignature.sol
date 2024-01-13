@@ -134,7 +134,8 @@ contract PermitSignature {
     function getPermitTransferSignature(
         ISignatureTransfer.PermitTransferFrom memory permit,
         uint256 privateKey,
-        bytes32 domainSeparator
+        bytes32 domainSeparator,
+        address _spender
     ) internal view returns (bytes memory sig) {
         bytes32 tokenPermissions = keccak256(abi.encode(_TOKEN_PERMISSIONS_TYPEHASH, permit.permitted));
         bytes32 msgHash = keccak256(
@@ -143,7 +144,7 @@ contract PermitSignature {
                 domainSeparator,
                 keccak256(
                     abi.encode(
-                        _PERMIT_TRANSFER_FROM_TYPEHASH, tokenPermissions, address(this), permit.nonce, permit.deadline
+                        _PERMIT_TRANSFER_FROM_TYPEHASH, tokenPermissions, _spender, permit.nonce, permit.deadline
                     )
                 )
             )
