@@ -15,6 +15,7 @@ import {Permit2} from "../src/Permit2.sol";
 import {SignatureTransfer} from "../src/SignatureTransfer.sol";
 import {Verifier} from "../src/Verifier.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
+import {IPermit2} from "../src/interfaces/IPermit2.sol";
 import {ISignatureTransfer} from "../src/interfaces/ISignatureTransfer.sol";
 import {InvalidNonce, SignatureExpired} from "../src/PermitErrors.sol";
 
@@ -52,7 +53,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         "PermitBatchWitnessTransferFrom(TokenPermissions[] permitted,address spender,uint256 nonce,uint256 deadline,MockWitness witness)MockWitness(uint256 value,address person,bool test)TokenPermissions(address token,uint256 amount)"
     );
 
-    Permit2 permit2;
+    IPermit2 permit2;
     Escrow escrow;
     Verifier verifier;
 
@@ -66,7 +67,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
     bytes32 DOMAIN_SEPARATOR;
 
     function setUp() public {
-        permit2 = new Permit2();
+        permit2 = IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3);
         DOMAIN_SEPARATOR = permit2.DOMAIN_SEPARATOR();
 
         escrow = new Escrow();
