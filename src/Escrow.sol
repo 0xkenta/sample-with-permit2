@@ -1,15 +1,15 @@
 pragma solidity 0.8.17;
 
 contract Escrow {
-    mapping(address => uint256) public balances;
+    mapping(address => mapping(address => uint256)) public balances;
 
     constructor() {}
 
-    function tokenIn(address _depositor, uint256 _amount) external {
-        balances[_depositor] = _amount;
+    function tokenIn(address _depositor, address _token, uint256 _amount) external {
+        balances[_depositor][_token] += _amount;
     }
 
-    function getBalance(address _depositor) external view returns (uint256) {
-        return balances[_depositor];
+    function getBalance(address _depositor, address _token) external view returns (uint256) {
+        return balances[_depositor][_token];
     }
 }
