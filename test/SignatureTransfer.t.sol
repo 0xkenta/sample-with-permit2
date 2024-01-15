@@ -94,14 +94,14 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
     function getTransferDetails(address to, uint256 amount)
         private
         pure
-        returns (ISignatureTransfer.SignatureTransferDetails memory)
+        returns (IPermit2.SignatureTransferDetails memory)
     {
-        return ISignatureTransfer.SignatureTransferDetails({to: to, requestedAmount: amount});
+        return IPermit2.SignatureTransferDetails({to: to, requestedAmount: amount});
     }
 
     function testPermitTransferFrom() public {
         uint256 nonce = 0;
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
         uint256 startBalanceFrom = token0.balanceOf(from);
@@ -109,7 +109,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 escrowBalanceBefore = escrow.getBalance(from, address(token0));
         assertEq(escrowBalanceBefore, 0);
 
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+        IPermit2.SignatureTransferDetails memory transferDetails =
             getTransferDetails(address(escrow), defaultAmount);
 
         verifier.deposit(permit, transferDetails, from, sig);
@@ -123,7 +123,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
 
     function testPermitTransferFromCompactSig() public {
         uint256 nonce = 0;
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         bytes memory sig =
             getCompactPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
         assertEq(sig.length, 64);
@@ -134,7 +134,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 escrowBalanceBefore = escrow.getBalance(from, address(token0));
         assertEq(escrowBalanceBefore, 0);
 
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+        IPermit2.SignatureTransferDetails memory transferDetails =
             getTransferDetails(address(escrow), defaultAmount);
 
         snapStart("permitTransferFromCompactSig");
@@ -150,16 +150,16 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
 
     function testPermitTransferFromIncorrectSigLength() public {
         uint256 nonce = 0;
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
         bytes memory sigExtra = bytes.concat(sig, bytes1(uint8(0)));
         assertEq(sigExtra.length, 66);
 
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+        IPermit2.SignatureTransferDetails memory transferDetails =
             getTransferDetails(address(escrow), defaultAmount);
 
         vm.expectRevert(SignatureVerification.InvalidSignatureLength.selector);
-        permit2.permitTransferFrom(permit, transferDetails, from, sigExtra);
+        verifier.deposit(permit, transferDetails, from, sigExtra);
     }
 
     // function testPermitTransferFromToSpender() public {
@@ -181,10 +181,10 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
 
     function testPermitTransferFromInvalidNonce() public {
         uint256 nonce = 0;
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+        IPermit2.SignatureTransferDetails memory transferDetails =
             getTransferDetails(address(escrow), defaultAmount);
         verifier.deposit(permit, transferDetails, from, sig);
 
@@ -194,7 +194,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
 
     function testPermitTransferFromRandomNonceAndAmount(uint256 nonce, uint128 amount) public {
         token0.mint(address(from), amount);
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         permit.permitted.amount = amount;
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
@@ -204,7 +204,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 escrowBalanceBefore = escrow.getBalance(from, address(token0));
         assertEq(escrowBalanceBefore, 0);
 
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), amount);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), amount);
 
         verifier.deposit(permit, transferDetails, from, sig);
 
@@ -217,7 +217,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
 
     function testPermitTransferSpendLessThanFull(uint256 nonce, uint128 amount) public {
         token0.mint(address(from), amount);
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         permit.permitted.amount = amount;
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
@@ -228,7 +228,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         assertEq(escrowBalanceBefore, 0);
 
         uint256 amountToSpend = amount / 2;
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+        IPermit2.SignatureTransferDetails memory transferDetails =
             getTransferDetails(address(escrow), amountToSpend);
         verifier.deposit(permit, transferDetails, from, sig);
 
@@ -269,14 +269,14 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         address token1Address = address(token1);
 
         address[] memory tokens = AddressBuilder.fill(1, token0Address).push(token1Address);
-        ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
 
         bytes memory sig = getPermitBatchTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
         // must fill address to even though token0 wont get sent.
         // transfer details must be lenght of permit
         address[] memory to = AddressBuilder.fill(1, escrowAddress).push(escrowAddress);
-        ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
             StructBuilder.fillSigTransferDetails(defaultAmount, to);
         // spender doesnt need token0 even though user permitted it
         toAmountPairs[0].requestedAmount = 0;
@@ -311,10 +311,10 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         address token1Address = address(token1);
 
         address[] memory tokens = AddressBuilder.fill(1, token0Address).push(token1Address);
-        ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
         bytes memory sig = getPermitBatchTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
-        ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
             StructBuilder.fillSigTransferDetails(2, defaultAmount, address(escrow));
 
         uint256 startBalanceFrom0 = token0.balanceOf(from);
@@ -370,7 +370,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 nonce = 0;
 
         address[] memory tokens = AddressBuilder.fill(10, address(token0));
-        ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
         bytes memory sig = getPermitBatchTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
         uint256 startBalanceFrom0 = token0.balanceOf(from);
@@ -379,7 +379,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 escrowBalanceBefore = escrow.getBalance(from, address(token0));
         assertEq(escrowBalanceBefore, 0);
 
-        ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
             StructBuilder.fillSigTransferDetails(10, defaultAmount, address(escrow));
 
         snapStart("single recipient many tokens");
@@ -397,25 +397,25 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 nonce = 0;
 
         address[] memory tokens = AddressBuilder.fill(2, address(token0));
-        ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
         bytes memory sig = getPermitBatchTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
-        ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
             StructBuilder.fillSigTransferDetails(1, defaultAmount, address(escrow));
 
-        vm.expectRevert(ISignatureTransfer.LengthMismatch.selector);
+        vm.expectRevert(IPermit2.LengthMismatch.selector);
         verifier.deposit(permit, toAmountPairs, from, sig);
     }
 
     function testGasSinglePermitTransferFrom() public {
         uint256 nonce = 0;
-        ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
         uint256 startBalanceFrom = token0.balanceOf(from);
         uint256 startBalanceTo = token0.balanceOf(address(escrow));
 
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+        IPermit2.SignatureTransferDetails memory transferDetails =
             getTransferDetails(address(escrow), defaultAmount);
 
         snapStart("permitTransferFromSingleToken");
@@ -429,10 +429,10 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
     function testGasSinglePermitBatchTransferFrom() public {
         uint256 nonce = 0;
         address[] memory tokens = AddressBuilder.fill(1, address(token0));
-        ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
         bytes memory sig = getPermitBatchTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
-        ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
             StructBuilder.fillSigTransferDetails(1, defaultAmount, address(escrow));
 
         uint256 startBalanceFrom0 = token0.balanceOf(from);
@@ -449,11 +449,11 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
     function testGasMultiplePermitBatchTransferFrom() public {
         uint256 nonce = 0;
         address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1)).push(address(token1));
-        ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
         bytes memory sig = getPermitBatchTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
         address[] memory to = AddressBuilder.fill(2, address(escrow)).push(address(escrow));
-        ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
             StructBuilder.fillSigTransferDetails(defaultAmount, to);
 
         uint256 startBalanceFrom0 = token0.balanceOf(from);

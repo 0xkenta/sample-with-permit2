@@ -6,6 +6,7 @@ import {EIP712} from "openzeppelin-contracts/contracts/utils/cryptography/draft-
 import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {IAllowanceTransfer} from "../../src/interfaces/IAllowanceTransfer.sol";
 import {ISignatureTransfer} from "../../src/interfaces/ISignatureTransfer.sol";
+import {IPermit2} from "../../src/interfaces/IPermit2.sol";
 
 contract PermitSignature {
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
@@ -70,7 +71,7 @@ contract PermitSignature {
     }
 
     function getCompactPermitTransferSignature(
-        ISignatureTransfer.PermitTransferFrom memory permit,
+        IPermit2.PermitTransferFrom memory permit,
         uint256 privateKey,
         bytes32 domainSeparator,
         address _spender
@@ -133,7 +134,7 @@ contract PermitSignature {
     }
 
     function getPermitTransferSignature(
-        ISignatureTransfer.PermitTransferFrom memory permit,
+        IPermit2.PermitTransferFrom memory permit,
         uint256 privateKey,
         bytes32 domainSeparator,
         address _spender
@@ -177,7 +178,7 @@ contract PermitSignature {
     }
 
     function getPermitBatchTransferSignature(
-        ISignatureTransfer.PermitBatchTransferFrom memory permit,
+        IPermit2.PermitBatchTransferFrom memory permit,
         uint256 privateKey,
         bytes32 domainSeparator,
         address _spender
@@ -207,7 +208,7 @@ contract PermitSignature {
     }
 
     function getPermitBatchWitnessSignature(
-        ISignatureTransfer.PermitBatchTransferFrom memory permit,
+        IPermit2.PermitBatchTransferFrom memory permit,
         uint256 privateKey,
         bytes32 typeHash,
         bytes32 witness,
@@ -279,10 +280,10 @@ contract PermitSignature {
     function defaultERC20PermitTransfer(address token0, uint256 nonce)
         internal
         view
-        returns (ISignatureTransfer.PermitTransferFrom memory)
+        returns (IPermit2.PermitTransferFrom memory)
     {
-        return ISignatureTransfer.PermitTransferFrom({
-            permitted: ISignatureTransfer.TokenPermissions({token: token0, amount: 10 ** 18}),
+        return IPermit2.PermitTransferFrom({
+            permitted: IPermit2.TokenPermissions({token: token0, amount: 10 ** 18}),
             nonce: nonce,
             deadline: block.timestamp + 100
         });
@@ -303,14 +304,14 @@ contract PermitSignature {
     function defaultERC20PermitMultiple(address[] memory tokens, uint256 nonce)
         internal
         view
-        returns (ISignatureTransfer.PermitBatchTransferFrom memory)
+        returns (IPermit2.PermitBatchTransferFrom memory)
     {
-        ISignatureTransfer.TokenPermissions[] memory permitted =
-            new ISignatureTransfer.TokenPermissions[](tokens.length);
+        IPermit2.TokenPermissions[] memory permitted =
+            new IPermit2.TokenPermissions[](tokens.length);
         for (uint256 i = 0; i < tokens.length; ++i) {
-            permitted[i] = ISignatureTransfer.TokenPermissions({token: tokens[i], amount: 1 ** 18});
+            permitted[i] = IPermit2.TokenPermissions({token: tokens[i], amount: 1 ** 18});
         }
-        return ISignatureTransfer.PermitBatchTransferFrom({
+        return IPermit2.PermitBatchTransferFrom({
             permitted: permitted,
             nonce: nonce,
             deadline: block.timestamp + 100

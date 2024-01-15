@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {IAllowanceTransfer} from "../../src/interfaces/IAllowanceTransfer.sol";
+import {IPermit2} from "../../src/interfaces/IPermit2.sol";
 import {ISignatureTransfer} from "../../src/interfaces/ISignatureTransfer.sol";
 import {AddressBuilder} from "./AddressBuilder.sol";
 
@@ -37,7 +38,7 @@ library StructBuilder {
     function fillSigTransferDetails(uint256 length, uint256 amount, address to)
         external
         pure
-        returns (ISignatureTransfer.SignatureTransferDetails[] memory transferDetails)
+        returns (IPermit2.SignatureTransferDetails[] memory transferDetails)
     {
         return fillSigTransferDetails(amount, AddressBuilder.fill(length, to));
     }
@@ -45,11 +46,11 @@ library StructBuilder {
     function fillSigTransferDetails(uint256 amount, address[] memory tos)
         public
         pure
-        returns (ISignatureTransfer.SignatureTransferDetails[] memory transferDetails)
+        returns (IPermit2.SignatureTransferDetails[] memory transferDetails)
     {
-        transferDetails = new ISignatureTransfer.SignatureTransferDetails[](tos.length);
+        transferDetails = new IPermit2.SignatureTransferDetails[](tos.length);
         for (uint256 i = 0; i < tos.length; ++i) {
-            transferDetails[i] = ISignatureTransfer.SignatureTransferDetails({to: tos[i], requestedAmount: amount});
+            transferDetails[i] = IPermit2.SignatureTransferDetails({to: tos[i], requestedAmount: amount});
         }
     }
 }
