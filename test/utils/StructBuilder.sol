@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 
 import {IAllowanceTransfer} from "../../src/interfaces/IAllowanceTransfer.sol";
 import {IPermit2} from "../../src/interfaces/IPermit2.sol";
-import {ISignatureTransfer} from "../../src/interfaces/ISignatureTransfer.sol";
 import {AddressBuilder} from "./AddressBuilder.sol";
 
 library StructBuilder {

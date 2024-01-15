@@ -5,7 +5,6 @@ import {Vm} from "forge-std/Vm.sol";
 import {EIP712} from "openzeppelin-contracts/contracts/utils/cryptography/draft-EIP712.sol";
 import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {IAllowanceTransfer} from "../../src/interfaces/IAllowanceTransfer.sol";
-import {ISignatureTransfer} from "../../src/interfaces/ISignatureTransfer.sol";
 import {IPermit2} from "../../src/interfaces/IPermit2.sol";
 
 contract PermitSignature {
@@ -157,7 +156,7 @@ contract PermitSignature {
     }
 
     function getPermitWitnessTransferSignature(
-        ISignatureTransfer.PermitTransferFrom memory permit,
+        IPermit2.PermitTransferFrom memory permit,
         uint256 privateKey,
         bytes32 typehash,
         bytes32 witness,
@@ -292,10 +291,10 @@ contract PermitSignature {
     function defaultERC20PermitWitnessTransfer(address token0, uint256 nonce)
         internal
         view
-        returns (ISignatureTransfer.PermitTransferFrom memory)
+        returns (IPermit2.PermitTransferFrom memory)
     {
-        return ISignatureTransfer.PermitTransferFrom({
-            permitted: ISignatureTransfer.TokenPermissions({token: token0, amount: 10 ** 18}),
+        return IPermit2.PermitTransferFrom({
+            permitted: IPermit2.TokenPermissions({token: token0, amount: 10 ** 18}),
             nonce: nonce,
             deadline: block.timestamp + 100
         });

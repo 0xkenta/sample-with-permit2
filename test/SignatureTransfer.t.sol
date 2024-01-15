@@ -10,11 +10,9 @@ import {AddressBuilder} from "./utils/AddressBuilder.sol";
 import {AmountBuilder} from "./utils/AmountBuilder.sol";
 import {StructBuilder} from "./utils/StructBuilder.sol";
 import {Escrow} from "../src/Escrow.sol";
-import {SignatureTransfer} from "../src/SignatureTransfer.sol";
 import {Verifier} from "../src/Verifier.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IPermit2} from "../src/interfaces/IPermit2.sol";
-import {ISignatureTransfer} from "../src/interfaces/ISignatureTransfer.sol";
 import {InvalidNonce, SignatureExpired} from "../src/PermitErrors.sol";
 
 contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnapshot {
