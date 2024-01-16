@@ -20,6 +20,7 @@ contract Verifier {
         bytes calldata _signature
     ) external {
         permit2.permitTransferFrom(_permit, _transferDetails, _from, _signature);
+        
         escrow.tokenIn(_from, _permit.permitted.token, _transferDetails.requestedAmount);
     }
 
