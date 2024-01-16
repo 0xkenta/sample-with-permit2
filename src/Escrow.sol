@@ -6,6 +6,7 @@ contract Escrow {
     constructor() {}
 
     // caution: no access control because of the sample code!
+    // actually called only by the verifier contract
     function tokenIn(address _depositor, address _token, uint256 _amount) external {
         balances[_depositor][_token] += _amount;
     }
