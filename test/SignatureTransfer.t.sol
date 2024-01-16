@@ -107,8 +107,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 escrowBalanceBefore = escrow.getBalance(from, address(token0));
         assertEq(escrowBalanceBefore, 0);
 
-        IPermit2.SignatureTransferDetails memory transferDetails =
-            getTransferDetails(address(escrow), defaultAmount);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
 
         verifier.deposit(permit, transferDetails, from, sig);
 
@@ -132,8 +131,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 escrowBalanceBefore = escrow.getBalance(from, address(token0));
         assertEq(escrowBalanceBefore, 0);
 
-        IPermit2.SignatureTransferDetails memory transferDetails =
-            getTransferDetails(address(escrow), defaultAmount);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
 
         snapStart("permitTransferFromCompactSig");
         verifier.deposit(permit, transferDetails, from, sig);
@@ -153,8 +151,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         bytes memory sigExtra = bytes.concat(sig, bytes1(uint8(0)));
         assertEq(sigExtra.length, 66);
 
-        IPermit2.SignatureTransferDetails memory transferDetails =
-            getTransferDetails(address(escrow), defaultAmount);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
 
         vm.expectRevert(SignatureVerification.InvalidSignatureLength.selector);
         verifier.deposit(permit, transferDetails, from, sigExtra);
@@ -182,8 +179,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         IPermit2.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), nonce);
         bytes memory sig = getPermitTransferSignature(permit, fromPrivateKey, DOMAIN_SEPARATOR, address(verifier));
 
-        IPermit2.SignatureTransferDetails memory transferDetails =
-            getTransferDetails(address(escrow), defaultAmount);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
         verifier.deposit(permit, transferDetails, from, sig);
 
         vm.expectRevert(InvalidNonce.selector);
@@ -226,8 +222,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         assertEq(escrowBalanceBefore, 0);
 
         uint256 amountToSpend = amount / 2;
-        IPermit2.SignatureTransferDetails memory transferDetails =
-            getTransferDetails(address(escrow), amountToSpend);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), amountToSpend);
         verifier.deposit(permit, transferDetails, from, sig);
 
         assertEq(token0.balanceOf(from), startBalanceFrom - amountToSpend);
@@ -413,8 +408,7 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         uint256 startBalanceFrom = token0.balanceOf(from);
         uint256 startBalanceTo = token0.balanceOf(address(escrow));
 
-        IPermit2.SignatureTransferDetails memory transferDetails =
-            getTransferDetails(address(escrow), defaultAmount);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
 
         snapStart("permitTransferFromSingleToken");
         verifier.deposit(permit, transferDetails, from, sig);
@@ -469,90 +463,104 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
         assertEq(token1.balanceOf(address(escrow)), startBalanceTo1 + 2 * defaultAmount);
     }
 
-    // function testPermitBatchTransferFromTypedWitness() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
-    //     ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+    function testPermitBatchTransferFromTypedWitness() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
 
-    //     bytes memory sig = getPermitBatchWitnessSignature(
-    //         permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_BATCH_TYPEHASH, witness, DOMAIN_SEPARATOR
-    //     );
+        bytes memory sig = getPermitBatchWitnessSignature(
+            permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_BATCH_TYPEHASH, witness, DOMAIN_SEPARATOR, address(verifier)
+        );
 
-    //     address[] memory to = AddressBuilder.fill(1, address(address2)).push(address(address0));
-    //     ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
-    //         StructBuilder.fillSigTransferDetails(defaultAmount, to);
+        address escrowAddress = address(escrow);
 
-    //     uint256 startBalanceFrom0 = token0.balanceOf(from);
-    //     uint256 startBalanceFrom1 = token1.balanceOf(from);
-    //     uint256 startBalanceTo0 = token0.balanceOf(address2);
-    //     uint256 startBalanceTo1 = token1.balanceOf(address0);
+        address[] memory to = AddressBuilder.fill(1, escrowAddress).push(escrowAddress);
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
+            StructBuilder.fillSigTransferDetails(defaultAmount, to);
 
-    //     snapStart("permitTransferFromBatchTypedWitness");
-    //     permit2.permitWitnessTransferFrom(permit, toAmountPairs, from, witness, WITNESS_TYPE_STRING, sig);
-    //     snapEnd();
+        uint256 startBalanceFrom0 = token0.balanceOf(from);
+        uint256 startBalanceFrom1 = token1.balanceOf(from);
+        uint256 startBalanceTo0 = token0.balanceOf(escrowAddress);
+        uint256 startBalanceTo1 = token1.balanceOf(escrowAddress);
 
-    //     assertEq(token0.balanceOf(from), startBalanceFrom0 - defaultAmount);
-    //     assertEq(token1.balanceOf(from), startBalanceFrom1 - defaultAmount);
-    //     assertEq(token0.balanceOf(address2), startBalanceTo0 + defaultAmount);
-    //     assertEq(token1.balanceOf(address0), startBalanceTo1 + defaultAmount);
-    // }
+        uint256 escrowBalanceToken0Before = escrow.getBalance(from, address(token0));
+        assertEq(escrowBalanceToken0Before, 0);
+        uint256 escrowBalanceToken1Before = escrow.getBalance(from, address(token1));
+        assertEq(escrowBalanceToken1Before, 0);
 
-    // function testPermitBatchTransferFromTypedWitnessInvalidType() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
-    //     ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
-    //     bytes memory sig = getPermitBatchWitnessSignature(
-    //         permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_BATCH_TYPEHASH, witness, DOMAIN_SEPARATOR
-    //     );
+        snapStart("permitTransferFromBatchTypedWitness");
+        verifier.depositWithWitness(permit, toAmountPairs, from, witness, WITNESS_TYPE_STRING, sig);
+        snapEnd();
 
-    //     address[] memory to = AddressBuilder.fill(1, address(address2)).push(address(address0));
-    //     ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
-    //         StructBuilder.fillSigTransferDetails(defaultAmount, to);
+        assertEq(token0.balanceOf(from), startBalanceFrom0 - defaultAmount);
+        assertEq(token1.balanceOf(from), startBalanceFrom1 - defaultAmount);
+        assertEq(token0.balanceOf(escrowAddress), startBalanceTo0 + defaultAmount);
+        assertEq(token1.balanceOf(escrowAddress), startBalanceTo1 + defaultAmount);
 
-    //     vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-    //     permit2.permitWitnessTransferFrom(permit, toAmountPairs, from, witness, "fake type", sig);
-    // }
+        uint256 escrowBalanceToken0After = escrow.getBalance(from, address(token0));
+        assertEq(escrowBalanceToken0After, escrowBalanceToken0Before + defaultAmount);
+        uint256 escrowBalanceToken1After = escrow.getBalance(from, address(token1));
+        assertEq(escrowBalanceToken1After, escrowBalanceToken1Before + defaultAmount);
+    }
 
-    // function testPermitBatchTransferFromTypedWitnessInvalidTypeHash() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
-    //     ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
-    //     bytes memory sig =
-    //         getPermitBatchWitnessSignature(permit, fromPrivateKey, "fake typehash", witness, DOMAIN_SEPARATOR);
+    function testPermitBatchTransferFromTypedWitnessInvalidType() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        bytes memory sig = getPermitBatchWitnessSignature(
+            permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_BATCH_TYPEHASH, witness, DOMAIN_SEPARATOR, address(verifier)
+        );
 
-    //     address[] memory to = AddressBuilder.fill(1, address(address2)).push(address(address0));
-    //     ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
-    //         StructBuilder.fillSigTransferDetails(defaultAmount, to);
+        address escrowAddress = address(escrow);
 
-    //     vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-    //     permit2.permitWitnessTransferFrom(permit, toAmountPairs, from, witness, WITNESS_TYPE_STRING, sig);
-    // }
+        address[] memory to = AddressBuilder.fill(1, escrowAddress).push(escrowAddress);
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
+            StructBuilder.fillSigTransferDetails(defaultAmount, to);
 
-    // function testPermitBatchTransferFromTypedWitnessInvalidWitness() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
-    //     ISignatureTransfer.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
-    //     bytes memory sig = getPermitBatchWitnessSignature(
-    //         permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_BATCH_TYPEHASH, witness, DOMAIN_SEPARATOR
-    //     );
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        verifier.depositWithWitness(permit, toAmountPairs, from, witness, "fake type", sig);
+    }
 
-    //     address[] memory to = AddressBuilder.fill(1, address(address2)).push(address(address0));
-    //     ISignatureTransfer.SignatureTransferDetails[] memory toAmountPairs =
-    //         StructBuilder.fillSigTransferDetails(defaultAmount, to);
+    function testPermitBatchTransferFromTypedWitnessInvalidTypeHash() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        bytes memory sig =
+            getPermitBatchWitnessSignature(permit, fromPrivateKey, "fake typehash", witness, DOMAIN_SEPARATOR, address(verifier));
 
-    //     vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-    //     permit2.permitWitnessTransferFrom(
-    //         permit, toAmountPairs, from, keccak256(abi.encodePacked("bad witness")), WITNESS_TYPE_STRING, sig
-    //     );
-    // }
+        address[] memory to = AddressBuilder.fill(1, address(escrow)).push(address(escrow));
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
+            StructBuilder.fillSigTransferDetails(defaultAmount, to);
+
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        verifier.depositWithWitness(permit, toAmountPairs, from, witness, WITNESS_TYPE_STRING, sig);
+    }
+
+    function testPermitBatchTransferFromTypedWitnessInvalidWitness() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        address[] memory tokens = AddressBuilder.fill(1, address(token0)).push(address(token1));
+        IPermit2.PermitBatchTransferFrom memory permit = defaultERC20PermitMultiple(tokens, nonce);
+        bytes memory sig = getPermitBatchWitnessSignature(
+            permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_BATCH_TYPEHASH, witness, DOMAIN_SEPARATOR, address(verifier)
+        );
+
+        address[] memory to = AddressBuilder.fill(1, address(escrow)).push(address(escrow));
+        IPermit2.SignatureTransferDetails[] memory toAmountPairs =
+            StructBuilder.fillSigTransferDetails(defaultAmount, to);
+
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        verifier.depositWithWitness(
+            permit, toAmountPairs, from, keccak256(abi.encodePacked("bad witness")), WITNESS_TYPE_STRING, sig
+        );
+    }
 
     // function testInvalidateUnorderedNonces() public {
     //     ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitTransfer(address(token0), 0);
@@ -574,54 +582,60 @@ contract SignatureTransferTest is Test, PermitSignature, TokenProvider, GasSnaps
     //     permit2.permitTransferFrom(permit, transferDetails, from, sig);
     // }
 
-    // function testPermitTransferFromTypedWitness() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitWitnessTransfer(address(token0), nonce);
-    //     bytes memory sig = getPermitWitnessTransferSignature(
-    //         permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_TYPEHASH, witness, DOMAIN_SEPARATOR
-    //     );
+    function testPermitTransferFromTypedWitness() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitWitnessTransfer(address(token0), nonce);
+        bytes memory sig = getPermitWitnessTransferSignature(
+            permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_TYPEHASH, witness, DOMAIN_SEPARATOR, address(verifier)
+        );
 
-    //     uint256 startBalanceFrom = token0.balanceOf(from);
-    //     uint256 startBalanceTo = token0.balanceOf(address2);
+        uint256 startBalanceFrom = token0.balanceOf(from);
+        uint256 startBalanceTo = token0.balanceOf(address(escrow));
 
-    //     ISignatureTransfer.SignatureTransferDetails memory transferDetails = getTransferDetails(address2, defaultAmount);
+        uint256 escrowBalanceToken0Before = escrow.getBalance(from, address(token0));
+        assertEq(escrowBalanceToken0Before, 0);
 
-    //     snapStart("permitTransferFromTypedWitness");
-    //     permit2.permitWitnessTransferFrom(permit, transferDetails, from, witness, WITNESS_TYPE_STRING, sig);
-    //     snapEnd();
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
 
-    //     assertEq(token0.balanceOf(from), startBalanceFrom - defaultAmount);
-    //     assertEq(token0.balanceOf(address2), startBalanceTo + defaultAmount);
-    // }
+        snapStart("permitTransferFromTypedWitness");
+        verifier.depositWithWitness(permit, transferDetails, from, witness, WITNESS_TYPE_STRING, sig);
+        snapEnd();
 
-    // function testPermitTransferFromTypedWitnessInvalidType() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitWitnessTransfer(address(token0), nonce);
-    //     bytes memory sig = getPermitWitnessTransferSignature(
-    //         permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_TYPEHASH, witness, DOMAIN_SEPARATOR
-    //     );
+        assertEq(token0.balanceOf(from), startBalanceFrom - defaultAmount);
+        assertEq(token0.balanceOf(address(escrow)), startBalanceTo + defaultAmount);
 
-    //     ISignatureTransfer.SignatureTransferDetails memory transferDetails = getTransferDetails(address2, defaultAmount);
+        uint256 escrowBalanceToken0After = escrow.getBalance(from, address(token0));
+        assertEq(escrowBalanceToken0After, escrowBalanceToken0Before + defaultAmount);
+    }
 
-    //     vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-    //     permit2.permitWitnessTransferFrom(permit, transferDetails, from, witness, "fake typedef", sig);
-    // }
+    function testPermitTransferFromTypedWitnessInvalidType() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitWitnessTransfer(address(token0), nonce);
+        bytes memory sig = getPermitWitnessTransferSignature(
+            permit, fromPrivateKey, FULL_EXAMPLE_WITNESS_TYPEHASH, witness, DOMAIN_SEPARATOR, address(verifier)
+        );
 
-    // function testPermitTransferFromTypedWitnessInvalidTypehash() public {
-    //     uint256 nonce = 0;
-    //     MockWitness memory witnessData = MockWitness(10000000, address(5), true);
-    //     bytes32 witness = keccak256(abi.encode(witnessData));
-    //     ISignatureTransfer.PermitTransferFrom memory permit = defaultERC20PermitWitnessTransfer(address(token0), nonce);
-    //     bytes memory sig =
-    //         getPermitWitnessTransferSignature(permit, fromPrivateKey, "fake typehash", witness, DOMAIN_SEPARATOR);
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
 
-    //     ISignatureTransfer.SignatureTransferDetails memory transferDetails = getTransferDetails(address2, defaultAmount);
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        verifier.depositWithWitness(permit, transferDetails, from, witness, "fake typedef", sig);
+    }
 
-    //     vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-    //     permit2.permitWitnessTransferFrom(permit, transferDetails, from, witness, WITNESS_TYPE_STRING, sig);
-    // }
+    function testPermitTransferFromTypedWitnessInvalidTypehash() public {
+        uint256 nonce = 0;
+        MockWitness memory witnessData = MockWitness(10000000, address(5), true);
+        bytes32 witness = keccak256(abi.encode(witnessData));
+        IPermit2.PermitTransferFrom memory permit = defaultERC20PermitWitnessTransfer(address(token0), nonce);
+        bytes memory sig =
+            getPermitWitnessTransferSignature(permit, fromPrivateKey, "fake typehash", witness, DOMAIN_SEPARATOR, address(verifier));
+
+        IPermit2.SignatureTransferDetails memory transferDetails = getTransferDetails(address(escrow), defaultAmount);
+
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        verifier.depositWithWitness(permit, transferDetails, from, witness, WITNESS_TYPE_STRING, sig);
+    }
 }

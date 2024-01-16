@@ -34,7 +34,7 @@ interface IPermit2 {
         // deadline on the permit signature
         uint256 deadline;
     }
-    
+
     function permitTransferFrom(
         PermitTransferFrom memory permit,
         SignatureTransferDetails calldata transferDetails,
@@ -46,6 +46,24 @@ interface IPermit2 {
         PermitBatchTransferFrom memory permit,
         SignatureTransferDetails[] calldata transferDetails,
         address owner,
+        bytes calldata signature
+    ) external;
+
+    function permitWitnessTransferFrom(
+        PermitTransferFrom memory permit,
+        IPermit2.SignatureTransferDetails calldata transferDetails,
+        address owner,
+        bytes32 witness,
+        string calldata witnessTypeString,
+        bytes calldata signature
+    ) external;
+
+    function permitWitnessTransferFrom(
+        PermitBatchTransferFrom memory permit,
+        IPermit2.SignatureTransferDetails[] calldata transferDetails,
+        address owner,
+        bytes32 witness,
+        string calldata witnessTypeString,
         bytes calldata signature
     ) external;
 

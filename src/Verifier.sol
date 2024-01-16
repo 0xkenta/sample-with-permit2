@@ -41,4 +41,38 @@ contract Verifier {
             }
         }
     }
+
+    function depositWithWitness(
+        IPermit2.PermitTransferFrom memory _permit,
+        IPermit2.SignatureTransferDetails calldata _transferDetails,
+        address _owner,
+        bytes32 _witness,
+        string calldata _witnessTypeString,
+        bytes calldata _signature
+    ) external {
+        permit2.permitWitnessTransferFrom(_permit, _transferDetails, _owner, _witness, _witnessTypeString, _signature);
+    
+        escrow.tokenIn(_owner, _permit.permitted.token, _transferDetails.requestedAmount);
+    }
+
+    function depositWithWitness(
+        IPermit2.PermitBatchTransferFrom memory _permit,
+        IPermit2.SignatureTransferDetails[] calldata _transferDetails,
+        address _owner,
+        bytes32 _witness,
+        string calldata _witnessTypeString,
+        bytes calldata _signature
+    ) external {
+        permit2.permitWitnessTransferFrom(_permit, _transferDetails, _owner, _witness, _witnessTypeString, _signature);
+
+        uint256 length = _permit.permitted.length;
+
+        for (uint256 i; i < length;) {
+            escrow.tokenIn(_owner, _permit.permitted[i].token, _transferDetails[i].requestedAmount);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
 }

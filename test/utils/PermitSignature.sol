@@ -160,7 +160,8 @@ contract PermitSignature {
         uint256 privateKey,
         bytes32 typehash,
         bytes32 witness,
-        bytes32 domainSeparator
+        bytes32 domainSeparator,
+        address _spender
     ) internal view returns (bytes memory sig) {
         bytes32 tokenPermissions = keccak256(abi.encode(_TOKEN_PERMISSIONS_TYPEHASH, permit.permitted));
 
@@ -168,7 +169,7 @@ contract PermitSignature {
             abi.encodePacked(
                 "\x19\x01",
                 domainSeparator,
-                keccak256(abi.encode(typehash, tokenPermissions, address(this), permit.nonce, permit.deadline, witness))
+                keccak256(abi.encode(typehash, tokenPermissions, _spender, permit.nonce, permit.deadline, witness))
             )
         );
 
@@ -211,7 +212,8 @@ contract PermitSignature {
         uint256 privateKey,
         bytes32 typeHash,
         bytes32 witness,
-        bytes32 domainSeparator
+        bytes32 domainSeparator,
+        address _spender
     ) internal view returns (bytes memory sig) {
         bytes32[] memory tokenPermissions = new bytes32[](permit.permitted.length);
         for (uint256 i = 0; i < permit.permitted.length; ++i) {
@@ -226,7 +228,7 @@ contract PermitSignature {
                     abi.encode(
                         typeHash,
                         keccak256(abi.encodePacked(tokenPermissions)),
-                        address(this),
+                        _spender,
                         permit.nonce,
                         permit.deadline,
                         witness
@@ -305,15 +307,10 @@ contract PermitSignature {
         view
         returns (IPermit2.PermitBatchTransferFrom memory)
     {
-        IPermit2.TokenPermissions[] memory permitted =
-            new IPermit2.TokenPermissions[](tokens.length);
+        IPermit2.TokenPermissions[] memory permitted = new IPermit2.TokenPermissions[](tokens.length);
         for (uint256 i = 0; i < tokens.length; ++i) {
             permitted[i] = IPermit2.TokenPermissions({token: tokens[i], amount: 1 ** 18});
         }
-        return IPermit2.PermitBatchTransferFrom({
-            permitted: permitted,
-            nonce: nonce,
-            deadline: block.timestamp + 100
-        });
+        return IPermit2.PermitBatchTransferFrom({permitted: permitted, nonce: nonce, deadline: block.timestamp + 100});
     }
 }
